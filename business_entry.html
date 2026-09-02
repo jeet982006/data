@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>{{ business["name"] }} - Entry</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/business_entry.css'
+        ) }}"
+    >
+</head>
+
+
+<body>
+
+
+<header class="entry-header">
+
+    <a
+        href="{{ url_for('dashboard', year=selected_year) }}"
+        class="back-button"
+    >
+        ← Back
+    </a>
+
+
+    <div class="header-title">
+
+        <h1>
+            {{ business["name"] }}
+        </h1>
+
+        <span>
+            {{ selected_year }}
+            ·
+            01/04/{{ selected_year[:4] }}
+            -
+            31/03/{{ selected_year[:4]|int + 1 }}
+        </span>
+
+    </div>
+
+
+    <div class="header-space"></div>
+
+</header>
+
+
+
+<main class="entry-container">
+
+
+    <!-- =================================================
+         FINANCIAL YEAR
+    ================================================== -->
+
+    <section class="year-switch-card">
+
+        <div>
+
+            <strong>
+                Financial Year
+            </strong>
+
+            <span>
+                Current page:
+                {{ selected_year }}
+            </span>
+
+        </div>
+
+
+        <form
+            method="GET"
+            action="{{ url_for('business_entry', business_id=business['id']) }}"
+        >
+
+            <select
+                name="year"
+                onchange="this.form.submit()"
+            >
+
+                {% for year in financial_years %}
+
+                    <option
+                        value="{{ year }}"
+                        {% if year == selected_year %}
+                            selected
+                        {% endif %}
+                    >
+                        01/04/{{ year[:4] }}
+                        -
+                        31/03/{{ year[:4]|int + 1 }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </form>
+
+    </section>
+
+
+
+    <!-- =================================================
+         CLOSE AMOUNT
+    ================================================== -->
+
+    <section class="amount-details-card">
+
+        <div class="amount-detail-box">
+
+            <div class="amount-detail-title">
+
+                <h3>
+                    Close Amount
+                </h3>
+
+                <p>
+                    Previous year / previous balance
+                </p>
+
+            </div>
+
+
+            {% if previous_close > 0 %}
+
+                <div class="previous-close-info">
+
+                    Previous Year
+                    {{ previous_year }}
+
+                    :
+                    {{ previous_close|inr }}
+
+                    <span>
+                        Auto-filled
+                    </span>
+
+                </div>
+
+            {% endif %}
+
+
+            <form
+                action="{{ url_for(
+                    'set_close_amount',
+                    business_id=business['id']
+                ) }}"
+                method="POST"
+                class="amount-detail-form"
+            >
+
+                <input
+                    type="hidden"
+                    name="year"
+                    value="{{ selected_year }}"
+                >
+
+
+                <input
+                    type="number"
+                    name="close_amount"
+                    value="{{ business['close_amount'] }}"
+                    min="0"
+                    step="0.01"
+                    placeholder="Enter close amount"
+                    autocomplete="off"
+                >
+
+
+                <button
+                    type="submit"
+                    class="amount-save-button close-save-button"
+                >
+                    Enter
+                </button>
+
+            </form>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         NEW BILL ENTRY
+    ================================================== -->
+
+    <section class="entry-form-card">
+
+        <div class="entry-form-header">
+
+            <h3 id="entryFormTitle">
+                New Entry
+            </h3>
+
+
+            <button
+                type="button"
+                id="cancelEditButton"
+                class="cancel-edit-button hidden"
+            >
+                Cancel Update
+            </button>
+
+        </div>
+
+
+        <form
+            id="entryForm"
+
+            action="{{ url_for(
+                'add_entry',
+                business_id=business['id']
+            ) }}"
+
+            method="POST"
+
+            class="entry-form"
+
+            data-add-action="{{ url_for(
+                'add_entry',
+                business_id=business['id']
+            ) }}"
+
+            data-business-id="{{ business['id'] }}"
+
+            data-year="{{ selected_year }}"
+        >
+
+            <input
+                type="hidden"
+                name="entry_id"
+                id="entry_id"
+                value=""
+            >
+
+
+            <input
+                type="hidden"
+                name="year"
+                value="{{ selected_year }}"
+            >
+
+
+            <div class="form-group">
+
+                <label for="entry_date_picker">
+                    Date
+                </label>
+
+
+                <input
+                    type="text"
+                    id="entry_date_picker"
+                    class="date-picker-input"
+                    placeholder="dd/mm/yyyy"
+                    inputmode="numeric"
+                    maxlength="10"
+                    autocomplete="off"
+                    required
+                >
+
+
+                <input
+                    type="hidden"
+                    name="entry_date"
+                    id="entry_date"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="bill_amount">
+                    Bill Amount
+                </label>
+
+
+                <input
+                    type="number"
+                    id="bill_amount"
+                    name="bill_amount"
+                    placeholder="Enter bill amount"
+                    min="0"
+                    step="0.01"
+                    required
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+            <div class="form-group button-group">
+
+                <label class="invisible-label">
+                    Action
+                </label>
+
+
+                <button
+                    type="submit"
+                    id="entrySubmitButton"
+                    class="enter-button"
+                >
+                    Enter
+                </button>
+
+            </div>
+
+        </form>
+
+    </section>
+
+
+
+    <!-- =================================================
+         BILL INDEX
+    ================================================== -->
+
+    <section class="index-card">
+
+        <div class="index-header">
+
+            <h2>
+                Bill Index
+            </h2>
+
+        </div>
+
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            No.
+                        </th>
+
+                        <th>
+                            Date
+                        </th>
+
+                        <th>
+                            Bill Amount
+                        </th>
+
+                        <th>
+                            Update
+                        </th>
+
+                        <th>
+                            Delete
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                {% if entries %}
+
+                    {% for entry in entries %}
+
+                        <tr>
+
+                            <td data-label="No.">
+                                {{ loop.index }}
+                            </td>
+
+                            <td data-label="Date">
+                                {{ entry["entry_date"]|dmy }}
+                            </td>
+
+                            <td
+                                data-label="Bill Amount"
+                                class="money-cell"
+                            >
+                                {{ entry["bill_amount"]|inr }}
+                            </td>
+
+                            <td data-label="Update">
+
+                                <button
+                                    type="button"
+
+                                    class="row-button update-button js-edit-entry"
+
+                                    data-entry-id="{{ entry['id'] }}"
+
+                                    data-entry-date="{{ entry['entry_date']|dmy }}"
+
+                                    data-bill-amount="{{ entry['bill_amount'] }}"
+                                >
+                                    Update
+                                </button>
+
+                            </td>
+
+                            <td data-label="Delete">
+
+                                <form
+                                    action="{{ url_for(
+                                        'delete_entry',
+                                        business_id=business['id'],
+                                        entry_id=entry['id']
+                                    ) }}"
+                                    method="POST"
+                                    class="delete-entry-form"
+                                >
+
+                                    <input
+                                        type="hidden"
+                                        name="year"
+                                        value="{{ selected_year }}"
+                                    >
+
+                                    <button
+                                        type="submit"
+                                        class="row-button delete-button"
+                                    >
+                                        Delete
+                                    </button>
+
+                                </form>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <tr>
+
+                        <td
+                            colspan="5"
+                            class="empty-row"
+                        >
+                            No bill entries yet.
+                        </td>
+
+                    </tr>
+
+                {% endif %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         AMOUNT RECEIVED
+    ================================================== -->
+
+    <section class="received-form-card">
+
+        <div class="received-form-header">
+
+            <div>
+
+                <h2>
+                    Amount Received
+                </h2>
+
+                <p>
+                    Enter payment whenever money is received.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <form
+            action="{{ url_for(
+                'add_received',
+                business_id=business['id']
+            ) }}"
+            method="POST"
+            class="received-form"
+            id="receivedForm"
+        >
+
+            <input
+                type="hidden"
+                name="received_id"
+                id="received_id"
+                value=""
+            >
+
+            <input
+                type="hidden"
+                name="year"
+                value="{{ selected_year }}"
+            >
+
+
+            <div class="form-group">
+
+                <label for="received_date_picker">
+                    Received Date
+                </label>
+
+
+                <input
+                    type="text"
+                    id="received_date_picker"
+                    class="date-picker-input"
+                    placeholder="dd/mm/yyyy"
+                    inputmode="numeric"
+                    maxlength="10"
+                    autocomplete="off"
+                    required
+                >
+
+
+                <input
+                    type="hidden"
+                    name="received_date"
+                    id="received_date"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="amount_received">
+                    Amount Received
+                </label>
+
+
+                <input
+                    type="number"
+                    id="amount_received"
+                    name="amount_received"
+                    placeholder="Enter amount received"
+                    min="0"
+                    step="0.01"
+                    required
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="received_note">
+                    Note (Optional)
+                </label>
+
+                <input
+                    type="text"
+                    id="received_note"
+                    name="note"
+                    placeholder="Enter note / payment ref"
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+            <div class="form-group button-group">
+
+                <label class="invisible-label">
+                    Action
+                </label>
+
+
+                <button
+                    type="submit"
+                    class="received-enter-button"
+                >
+                    Enter
+                </button>
+
+            </div>
+
+        </form>
+
+    </section>
+
+
+
+    <!-- =================================================
+         RECEIVED INDEX
+    ================================================== -->
+
+    <section class="received-index-card">
+
+        <div class="index-header received-index-header">
+
+            <h2>
+                Amount Received Index
+            </h2>
+
+        </div>
+
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            No.
+                        </th>
+
+                        <th>
+                            Date
+                        </th>
+
+                        <th>
+                            Amount Received
+                        </th>
+
+                        <th>
+                            Note
+                        </th>
+
+                        <th>
+                            Update
+                        </th>
+
+                        <th>
+                            Delete
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                {% if received_entries %}
+
+                    {% for received in received_entries %}
+
+                        <tr>
+
+                            <td data-label="No.">
+                                {{ loop.index }}
+                            </td>
+
+                            <td data-label="Date">
+                                {{ received["received_date"]|dmy }}
+                            </td>
+
+                            <td
+                                data-label="Amount Received"
+                                class="money-cell received-cell"
+                            >
+                                {{ received["amount_received"]|inr }}
+                            </td>
+
+                            <td data-label="Note">
+                                {{ received["note"] if received["note"] else "-" }}
+                            </td>
+
+                            <td data-label="Update">
+
+                                <button
+                                    type="button"
+
+                                    class="row-button update-button js-edit-received"
+
+                                    data-received-id="{{ received['id'] }}"
+
+                                    data-received-date="{{ received['received_date']|dmy }}"
+
+                                    data-amount-received="{{ received['amount_received'] }}"
+
+                                    data-note="{{ received['note']|default('') }}"
+                                >
+                                    Update
+                                </button>
+
+                            </td>
+
+                            <td data-label="Delete">
+
+                                <form
+                                    action="{{ url_for(
+                                        'delete_received',
+                                        business_id=business['id'],
+                                        received_id=received['id']
+                                    ) }}"
+                                    method="POST"
+                                    class="delete-received-form"
+                                >
+
+                                    <input
+                                        type="hidden"
+                                        name="year"
+                                        value="{{ selected_year }}"
+                                    >
+
+                                    <button
+                                        type="submit"
+                                        class="row-button delete-button"
+                                    >
+                                        Delete
+                                    </button>
+
+                                </form>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <tr>
+
+                        <td
+                            colspan="6"
+                            class="empty-row"
+                        >
+                            No amount received entries yet.
+                        </td>
+
+                    </tr>
+
+                {% endif %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         TOTALS
+    ================================================== -->
+
+    <section class="totals-card">
+
+        <div class="total-box">
+
+            <span>
+                Total Bill Amount
+            </span>
+
+            <strong>
+                {{ total_bill|inr }}
+            </strong>
+
+        </div>
+
+
+        <div class="total-box close-total-box">
+
+            <span>
+                Close Amount
+            </span>
+
+            <strong>
+                {{ business["close_amount"]|inr }}
+            </strong>
+
+        </div>
+
+
+        <div class="total-box">
+
+            <span>
+                Total Bill + Close Amount
+            </span>
+
+            <strong>
+                {{ total_with_close|inr }}
+            </strong>
+
+        </div>
+
+
+        <div class="total-box received-total-box">
+
+            <span>
+                Total Amount Received
+            </span>
+
+            <strong>
+                {{ total_received|inr }}
+            </strong>
+
+        </div>
+
+
+        <div class="total-box net-box">
+
+            <span>
+                Net Amount
+            </span>
+
+            <strong>
+                {{ net_amount|inr }}
+            </strong>
+
+        </div>
+
+    </section>
+
+
+</main>
+
+
+<!-- =====================================================
+     UPDATE POPUP
+===================================================== -->
+
+<div
+    id="updatePopupOverlay"
+    class="entry-popup-overlay"
+>
+
+    <div class="entry-popup-box">
+
+        <button
+            type="button"
+            class="entry-popup-close"
+            id="updatePopupClose"
+        >
+            ×
+        </button>
+
+        <div class="entry-popup-icon">
+            ✏️
+        </div>
+
+        <h2>
+            Update Entry
+        </h2>
+
+        <p id="updatePopupMessage">
+            Do you want to update this entry?
+        </p>
+
+        <div class="entry-popup-buttons">
+
+            <button
+                type="button"
+                class="entry-popup-button popup-cancel"
+                id="updatePopupCancel"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                class="entry-popup-button popup-primary"
+                id="updatePopupConfirm"
+            >
+                Update
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script
+    src="{{ url_for('static', filename='js/business_entry.js') }}"
+></script>
+
+
+</body>
+</html>

@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Business Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/dashboard.css') }}"
+    >
+</head>
+
+<body>
+
+<header class="top-header">
+
+    <div class="header-left">
+        <div class="brand-logo">B</div>
+        <span>Business Manager</span>
+    </div>
+
+    <div class="header-right">
+
+        <span class="user-name">
+            {{ username }}
+        </span>
+
+        <button
+            type="button"
+            class="logout-button"
+            id="logoutButton"
+        >
+            Logout
+        </button>
+
+    </div>
+
+</header>
+
+
+<main class="dashboard-container">
+
+
+    <!-- =================================================
+         WELCOME + FINANCIAL YEAR
+    ================================================== -->
+
+    <section class="welcome-section">
+
+        <div class="welcome-text">
+
+            <h1>
+                Welcome to Index
+            </h1>
+
+            <p>
+                Manage your business data from one place.
+            </p>
+
+        </div>
+
+
+        <div class="financial-year-area">
+
+                <div class="year-picker" id="yearPicker">
+                    <button type="button" class="year-picker-button" id="yearPickerButton" aria-expanded="false">
+                        <span>Financial Year</span>
+                        <strong id="selectedYearLabel">
+                            {{ financial_year_to_label(selected_year) }}
+                        </strong>
+                        <span class="year-arrow">▾</span>
+                    </button>
+
+                    <div class="year-menu" id="yearMenu">
+                        {% for year in financial_years %}
+                            <div class="year-menu-row {% if year == selected_year %}active{% endif %}">
+                                <button
+                                    type="button"
+                                    class="year-select-button"
+                                    data-year="{{ year }}"
+                                >
+                                    {{ financial_year_to_label(year) }}
+                                </button>
+
+                                {% if year != current_year %}
+                                    <button
+                                        type="button"
+                                        class="year-delete-button js-delete-year"
+                                        data-year="{{ year }}"
+                                        title="Delete {{ year }}"
+                                        aria-label="Delete financial year {{ year }}"
+                                    >
+                                        🗑
+                                    </button>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <button
+                    type="button"
+                    class="add-year-button"
+                    id="addYearButton"
+                >
+                    + Add Year
+                </button>
+
+            </div>
+        </section>
+
+
+    <!-- =================================================
+         ACTIONS
+    ================================================== -->
+
+    <section class="action-section">
+
+
+        <form
+            action="{{ url_for('add_name') }}"
+            method="POST"
+            class="add-form"
+        >
+
+            <input
+                type="hidden"
+                name="year"
+                value="{{ selected_year }}"
+            >
+
+            <input
+                type="text"
+                name="name"
+                placeholder="Enter new name"
+                required
+                autocomplete="off"
+            >
+
+            <button
+                type="submit"
+                class="add-button"
+            >
+                + Add New Name
+            </button>
+
+        </form>
+
+
+
+        <form
+            action="{{ url_for('search') }}"
+            method="GET"
+            class="search-form"
+            id="searchForm"
+        >
+
+            <input
+                type="hidden"
+                name="year"
+                value="{{ selected_year }}"
+            >
+
+            <input
+                type="search"
+                name="q"
+                id="searchInput"
+                value="{{ search_keyword|default('') }}"
+                placeholder="Search Name..."
+                autocomplete="off"
+            >
+
+            <button
+                type="submit"
+                class="search-button"
+            >
+                Search
+            </button>
+
+            {% if search_mode %}
+
+                <a
+                    href="{{ url_for('dashboard', year=selected_year) }}"
+                    class="clear-search-button"
+                >
+                    Clear
+                </a>
+
+            {% endif %}
+
+        </form>
+
+    </section>
+
+
+    <!-- =================================================
+         SEARCH RESULT
+    ================================================== -->
+
+    {% if search_mode %}
+
+        <div class="search-result-bar">
+
+            {% if businesses %}
+
+                <span>
+                    Search result for:
+                    <strong>
+                        "{{ search_keyword }}"
+                    </strong>
+                </span>
+
+                <span class="result-count">
+                    {{ businesses|length }} result(s)
+                </span>
+
+            {% else %}
+
+                <span class="not-found-message">
+                    No business found for:
+                    <strong>
+                        "{{ search_keyword }}"
+                    </strong>
+                </span>
+
+            {% endif %}
+
+        </div>
+
+    {% endif %}
+
+
+
+    <!-- =================================================
+         BUSINESS TABLE
+    ================================================== -->
+
+    <section class="table-card">
+
+
+        <div class="table-header">
+
+            <div>
+
+                <h2>
+                    Business List
+                </h2>
+
+                <p>
+                    Financial Year:
+                    <strong>
+                        {{ selected_year }}
+                    </strong>
+
+                    &nbsp; | &nbsp;
+
+                    Total Names:
+                    <strong>
+                        {{ businesses|length }}
+                    </strong>
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="table-wrapper">
+
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>No</th>
+
+                        <th>Name</th>
+
+                        <th>Total Sale Amount</th>
+
+                        <th>Amount Received</th>
+
+                        <th>Net Amount</th>
+
+                        <th>Save</th>
+
+                        <th>View</th>
+
+                        <th>Share</th>
+
+                        <th>Delete</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+
+                {% if businesses %}
+
+                    {% for business in businesses %}
+
+                        <tr>
+
+                            <td data-label="No">
+                                {{ loop.index }}
+                            </td>
+
+
+                            <td
+                                data-label="Name"
+                                class="name-cell"
+                            >
+
+                                <a
+                                    href="{{ url_for(
+                                        'business_entry',
+                                        business_id=business['id'],
+                                        year=selected_year
+                                    ) }}"
+                                    class="business-name"
+                                >
+                                    {{ business['name'] }}
+                                </a>
+
+                            </td>
+
+
+                            <td
+                                data-label="Total Sale Amount"
+                                class="money-cell"
+                            >
+                                {{ business['total_sale']|inr }}
+                            </td>
+
+
+                            <td
+                                data-label="Amount Received"
+                                class="money-cell received-money"
+                            >
+                                {{ business['amount_received']|inr }}
+                            </td>
+
+
+                            <td
+                                data-label="Net Amount"
+                                class="money-cell net-amount"
+                            >
+                                {{ business['net_amount']|inr }}
+                            </td>
+
+
+                            <td data-label="Save">
+
+                                <button
+                                    type="button"
+                                    class="table-action save-button js-save-file"
+                                    data-business-id="{{ business['id'] }}"
+                                    data-business-name="{{ business['name'] }}"
+                                >
+                                    Save
+                                </button>
+
+                            </td>
+
+
+                            <td data-label="View">
+
+                                <button
+                                    type="button"
+                                    class="table-action view-button js-view-file"
+                                    data-business-id="{{ business['id'] }}"
+                                >
+                                    View
+                                </button>
+
+                            </td>
+
+
+                            <td data-label="Share">
+
+                                <button
+                                    type="button"
+                                    class="table-action share-button js-share-file"
+                                    data-business-id="{{ business['id'] }}"
+                                    data-business-name="{{ business['name'] }}"
+                                >
+                                    Share
+                                </button>
+
+                            </td>
+
+
+                            <td data-label="Delete">
+
+                                <button
+                                    type="button"
+                                    class="table-action delete-button js-delete-business"
+                                    data-business-id="{{ business['id'] }}"
+                                    data-business-name="{{ business['name'] }}"
+                                >
+                                    Delete
+                                </button>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <tr>
+
+                        <td
+                            colspan="9"
+                            class="empty-row"
+                        >
+
+                            {% if search_mode %}
+
+                                No name found.
+
+                            {% else %}
+
+                                No business names found.
+                                <br>
+                                Add a new name to get started.
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                {% endif %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+    <!-- =================================================
+         BOTTOM ACTIONS
+    ================================================== -->
+
+    <section class="bottom-actions">
+
+        <div class="bottom-action-group">
+
+            <button
+                type="button"
+                class="clear-button"
+                id="clearButton"
+            >
+                Clear All Data
+            </button>
+
+            <span>
+                This clears bills, received amounts and close amounts for all years.
+                Names remain.
+            </span>
+
+        </div>
+
+
+        <div class="bottom-file-actions">
+
+            <button
+                type="button"
+                class="save-all-button"
+                id="saveAllButton"
+            >
+                Save All
+            </button>
+
+            <button
+                type="button"
+                class="view-all-button"
+                id="viewAllButton"
+            >
+                View All
+            </button>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+
+<!-- =====================================================
+     POPUP
+===================================================== -->
+
+<div
+    id="popupOverlay"
+    class="popup-overlay"
+>
+
+    <div class="popup-box">
+
+        <button
+            type="button"
+            class="popup-close"
+            id="popupCloseButton"
+        >
+            ×
+        </button>
+
+        <div
+            id="popupIcon"
+            class="popup-icon"
+        >
+            ?
+        </div>
+
+        <h2 id="popupTitle">
+            Confirmation
+        </h2>
+
+        <p id="popupMessage">
+            Are you sure?
+        </p>
+
+        <div
+            id="popupButtons"
+            class="popup-buttons"
+        ></div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     RECOVERY DATA
+===================================================== -->
+
+<div
+    id="recoveryData"
+
+    data-selected-year="{{ selected_year }}"
+
+    data-current-year="{{ current_year }}"
+
+    data-logout-url="{{ url_for('logout') }}"
+
+    data-clear-url="{{ url_for('clear_all') }}"
+
+    data-dashboard-url="{{ url_for('dashboard') }}"
+
+    data-add-year-url="{{ url_for('add_year') }}"
+    data-delete-year-url="{{ url_for('delete_year') }}"
+></div>
+
+
+<script
+    src="{{ url_for('static', filename='js/dashboard.js') }}"
+></script>
+
+
+</body>
+</html>
