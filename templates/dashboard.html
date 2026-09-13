@@ -11,6 +11,8 @@
         rel="stylesheet"
         href="{{ url_for('static', filename='css/dashboard.css') }}"
     >
+
+
 </head>
 
 <body>
@@ -69,7 +71,7 @@
                     <button type="button" class="year-picker-button" id="yearPickerButton" aria-expanded="false">
                         <span>Financial Year</span>
                         <strong id="selectedYearLabel">
-                            {{ financial_year_to_label(selected_year) }}
+                            01/04/{{ selected_year[:4] }} - 31/03/{{ selected_year[:4]|int + 1 }}
                         </strong>
                         <span class="year-arrow">▾</span>
                     </button>
@@ -82,7 +84,7 @@
                                     class="year-select-button"
                                     data-year="{{ year }}"
                                 >
-                                    {{ financial_year_to_label(year) }}
+                                    01/04/{{ year[:4] }} - 31/03/{{ year[:4]|int + 1 }}
                                 </button>
 
                                 {% if year != current_year %}
@@ -457,45 +459,43 @@
 
     <section class="bottom-actions">
 
-        <div class="bottom-action-group">
+    <div class="bottom-action-group">
 
-            <button
-                type="button"
-                class="clear-button"
-                id="clearButton"
-            >
-                Clear All Data
-            </button>
+        <button
+            type="button"
+            class="clear-button"
+            id="clearButton"
+        >
+            Clear All Data
+        </button>
 
-            <span>
-                This clears bills, received amounts and close amounts for all years.
-                Names remain.
-            </span>
+        <span>
+            This clears bills, received amounts and close amounts.
+        </span>
 
-        </div>
+    </div>
 
+    <div class="bottom-action-buttons">
 
-        <div class="bottom-file-actions">
+        <button
+            type="button"
+            class="save-all-button"
+            id="saveAllButton"
+        >
+            Save All
+        </button>
 
-            <button
-                type="button"
-                class="save-all-button"
-                id="saveAllButton"
-            >
-                Save All
-            </button>
+        <button
+            type="button"
+            class="view-all-button"
+            id="viewAllButton"
+        >
+            View All
+        </button>
 
-            <button
-                type="button"
-                class="view-all-button"
-                id="viewAllButton"
-            >
-                View All
-            </button>
+    </div>
 
-        </div>
-
-    </section>
+</section>
 
 </main>
 
