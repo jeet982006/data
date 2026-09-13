@@ -5955,12 +5955,9 @@ def logout():
 # =========================================================
 # START
 # =========================================================
-
+init_db()
+ensure_recovery_tables()
 if __name__ == "__main__":
-
-    init_db()
-
-    ensure_recovery_tables()
 
     app.run(
         debug=True,
