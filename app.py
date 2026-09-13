@@ -40,11 +40,29 @@ app.secret_key = "business_website_secret_key_2026"
 
 
 # =========================================================
-# LOGIN
+# LOGIN - 3 STEP AUTHENTICATION
 # =========================================================
 
-USERNAME = "sp"
-PASSWORD = "SPPB(2004)"
+# Step 1: Username + Password must match USERNAME / PASSWORD.
+# Step 2: Phone must be exactly 10 digits.
+# Step 3: Phone must be one of the two authorized numbers AND
+#         OTP must match today's DDMM format.
+#
+# If ANY of the four values is wrong -> banned error screen.
+
+USERNAME = "Shikha"
+PASSWORD = "SPPB(2004)@"
+
+AUTHORIZED_PHONES = [
+    "9374164964",
+    "9265000469"
+]
+
+
+def get_dynamic_otp():
+    """Return today's date in DDMM format as the valid OTP."""
+    today = datetime.today()
+    return today.strftime("%d%m")
 
 
 # =========================================================
@@ -840,7 +858,7 @@ def ensure_business_year(
 
 
 # =========================================================
-# LOGIN
+# LOGIN - STEP 1
 # =========================================================
 
 @app.route(
@@ -850,52 +868,54 @@ def ensure_business_year(
 def login():
 
     if session.get("logged_in"):
+        return redirect(url_for("dashboard"))
 
-        return redirect(
-            url_for("dashboard")
-        )
-
-
-    error = None
+    return render_template("login.html")
 
 
-    if request.method == "POST":
+# =========================================================
+# LOGIN - STEP 3 (OTP + CREDENTIAL VERIFICATION)
+# =========================================================
 
-        username = request.form.get(
-            "username",
-            ""
-        ).strip()
+@app.route(
+    "/verify-otp",
+    methods=["POST"]
+)
+def verify_otp():
 
+    username = request.form.get("username", "").strip()
+    password = request.form.get("password", "")
+    phone = request.form.get("phone", "").strip()
+    otp = request.form.get("otp", "").strip()
 
-        password = request.form.get(
-            "password",
-            ""
-        )
-
-
-        if (
-            username == USERNAME
-            and password == PASSWORD
-        ):
-
-            session["logged_in"] = True
-
-            session["username"] = username
-
-            return redirect(
-                url_for("dashboard")
-            )
-
-
-        error = (
-            "Invalid username or password."
-        )
-
-
-    return render_template(
-        "login.html",
-        error=error
+    valid_user = (
+        username == USERNAME
+        and password == PASSWORD
     )
+
+    valid_phone = phone in AUTHORIZED_PHONES
+    valid_otp = otp == get_dynamic_otp()
+
+    if valid_user and valid_phone and valid_otp:
+
+        session["logged_in"] = True
+        session["username"] = username
+
+        return jsonify({
+            "success": True,
+            "redirect": url_for("dashboard")
+        })
+
+    # Any failure results in the banned account screen.
+    session.clear()
+
+    return jsonify({
+        "success": False,
+        "message": (
+            "This account has not been opened in the last 30 days ago. "
+            "Account permanently banned."
+        )
+    })
 
 
 # =========================================================
@@ -2790,70 +2810,44 @@ def delete_business(business_id):
 # =========================================================
 
 def ensure_recovery_tables():
-
+    """Create all recovery tables and upgrade older recovery_backups schemas."""
     conn = get_db()
-
 
     conn.execute("""
         CREATE TABLE IF NOT EXISTS recovery_records (
-
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-
             recovery_id TEXT NOT NULL UNIQUE,
-
             clear_year TEXT NOT NULL,
-
             created_at TEXT NOT NULL
-
         )
     """)
-
 
     conn.execute("""
         CREATE TABLE IF NOT EXISTS recovery_businesses (
-
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-
             recovery_id TEXT NOT NULL,
-
             business_name TEXT NOT NULL,
-
             close_amount REAL NOT NULL DEFAULT 0
-
         )
     """)
-
 
     conn.execute("""
         CREATE TABLE IF NOT EXISTS recovery_bills (
-
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-
             recovery_id TEXT NOT NULL,
-
             business_name TEXT NOT NULL,
-
             entry_date TEXT NOT NULL,
-
             bill_amount REAL NOT NULL DEFAULT 0
-
         )
     """)
 
-
     conn.execute("""
         CREATE TABLE IF NOT EXISTS recovery_received (
-
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-
             recovery_id TEXT NOT NULL,
-
             business_name TEXT NOT NULL,
-
             received_date TEXT NOT NULL,
-
             amount_received REAL NOT NULL DEFAULT 0
-
         )
     """)
 
@@ -2883,8 +2877,43 @@ def ensure_recovery_tables():
         )
     """)
 
-    conn.commit()
+    # ---------------------------------------------------------
+    # Upgrade old recovery_backups table if it exists.
+    # Older versions could have created recovery_backups without
+    # recovery_type.  Adding the missing columns prevents the
+    # "no column named recovery_type" error.
+    # ---------------------------------------------------------
+    old_exists = conn.execute("""
+        SELECT 1
+        FROM sqlite_master
+        WHERE type = 'table' AND name = 'recovery_backups'
+    """).fetchone()
 
+    if old_exists:
+        columns = {
+            row["name"]
+            for row in conn.execute(
+                "PRAGMA table_info(recovery_backups)"
+            ).fetchall()
+        }
+
+        migrations = [
+            ("recovery_type", "TEXT DEFAULT 'ALL'"),
+            ("recovery_name", "TEXT"),
+            ("clear_year", "TEXT"),
+            ("created_at", "TEXT"),
+            ("snapshot_json", "TEXT DEFAULT '{}'"),
+            ("restored", "INTEGER NOT NULL DEFAULT 0"),
+        ]
+
+        for column_name, definition in migrations:
+            if column_name not in columns:
+                conn.execute(
+                    f"ALTER TABLE recovery_backups "
+                    f"ADD COLUMN {column_name} {definition}"
+                )
+
+    conn.commit()
     conn.close()
 
 
@@ -3163,7 +3192,14 @@ def capture_year_snapshot(
 
 
 def capture_all_data_snapshot():
+    """Capture EVERYTHING needed for a complete Clear All restore."""
     conn = get_db()
+
+    businesses = conn.execute("""
+        SELECT id, name, is_deleted
+        FROM businesses
+        ORDER BY id ASC
+    """).fetchall()
 
     financial_years = conn.execute("""
         SELECT financial_year
@@ -3192,6 +3228,7 @@ def capture_all_data_snapshot():
     conn.close()
 
     return {
+        "businesses": _rows_to_dicts(businesses),
         "financial_years": [
             row["financial_year"]
             for row in financial_years
@@ -3551,41 +3588,69 @@ def restore_recovery_backup(
                     ))
 
         elif recovery_type == "ALL":
-            for financial_year in snapshot["financial_years"]:
+            # Complete restore: replace the current database state with
+            # the exact snapshot captured by Clear All Data.
+            snapshot_years = snapshot.get("financial_years", [])
+            snapshot_businesses = snapshot.get("businesses", [])
+
+            # Clear child tables first because of foreign keys.
+            conn.execute("DELETE FROM entries")
+            conn.execute("DELETE FROM received_entries")
+            conn.execute("DELETE FROM business_years")
+            conn.execute("DELETE FROM businesses")
+            conn.execute("DELETE FROM financial_years")
+
+            # Restore financial years exactly as they were.
+            for financial_year in snapshot_years:
                 conn.execute("""
                     INSERT OR IGNORE INTO financial_years
                     (financial_year, created_at)
                     VALUES (?, CURRENT_TIMESTAMP)
                 """, (financial_year,))
 
-            conn.execute("DELETE FROM entries")
-            conn.execute("DELETE FROM received_entries")
-            conn.execute("DELETE FROM business_years")
+            # Old ALL snapshots did not contain business names.  New
+            # snapshots always do.  Keeping this fallback lets old
+            # recovery IDs restore transaction data where possible.
+            if snapshot_businesses:
+                for item in snapshot_businesses:
+                    business_id = int(item["id"])
+                    name = item["name"]
+                    is_deleted = int(item.get("is_deleted", 0) or 0)
 
-            for item in snapshot["business_years"]:
+                    conn.execute("""
+                        INSERT INTO businesses
+                        (id, name, is_deleted)
+                        VALUES (?, ?, ?)
+                    """, (
+                        business_id,
+                        name,
+                        is_deleted
+                    ))
+
+            # Restore year-specific close amounts.
+            for item in snapshot.get("business_years", []):
+                business_id = item["business_id"]
                 exists = conn.execute("""
-                    SELECT id
-                    FROM businesses
-                    WHERE id = ?
-                """, (item["business_id"],)).fetchone()
+                    SELECT 1 FROM businesses WHERE id = ?
+                """, (business_id,)).fetchone()
 
                 if exists:
                     conn.execute("""
-                        INSERT INTO business_years
+                        INSERT OR REPLACE INTO business_years
                         (business_id, financial_year, close_amount)
                         VALUES (?, ?, ?)
                     """, (
-                        item["business_id"],
+                        business_id,
                         item["financial_year"],
-                        float(item["close_amount"] or 0)
+                        float(item.get("close_amount", 0) or 0)
                     ))
 
-            for item in snapshot["entries"]:
+            # Restore bills.
+            for item in snapshot.get("entries", []):
+                business_id = item["business_id"]
                 exists = conn.execute("""
-                    SELECT id
-                    FROM businesses
-                    WHERE id = ?
-                """, (item["business_id"],)).fetchone()
+                    SELECT 1 FROM businesses WHERE id = ?
+                """, (business_id,)).fetchone()
 
                 if exists:
                     conn.execute("""
@@ -3593,17 +3658,17 @@ def restore_recovery_backup(
                         (business_id, entry_date, bill_amount)
                         VALUES (?, ?, ?)
                     """, (
-                        item["business_id"],
+                        business_id,
                         item["entry_date"],
-                        float(item["bill_amount"] or 0)
+                        float(item.get("bill_amount", 0) or 0)
                     ))
 
-            for item in snapshot["received_entries"]:
+            # Restore received amounts.
+            for item in snapshot.get("received_entries", []):
+                business_id = item["business_id"]
                 exists = conn.execute("""
-                    SELECT id
-                    FROM businesses
-                    WHERE id = ?
-                """, (item["business_id"],)).fetchone()
+                    SELECT 1 FROM businesses WHERE id = ?
+                """, (business_id,)).fetchone()
 
                 if exists:
                     conn.execute("""
@@ -3611,11 +3676,19 @@ def restore_recovery_backup(
                         (business_id, received_date, amount_received, note)
                         VALUES (?, ?, ?, ?)
                     """, (
-                        item["business_id"],
+                        business_id,
                         item["received_date"],
-                        float(item["amount_received"] or 0),
+                        float(item.get("amount_received", 0) or 0),
                         item.get("note", "")
                     ))
+
+            # Never leave the database without the current FY.
+            current_year = get_current_financial_year()
+            conn.execute("""
+                INSERT OR IGNORE INTO financial_years
+                (financial_year, created_at)
+                VALUES (?, CURRENT_TIMESTAMP)
+            """, (current_year,))
 
         else:
             raise ValueError(
@@ -4194,7 +4267,6 @@ def delete_year():
     methods=["POST"]
 )
 def clear_all():
-
     if not session.get("logged_in"):
         return jsonify({
             "success": False,
@@ -4206,7 +4278,57 @@ def clear_all():
         get_current_financial_year()
     ).strip()
 
+    current_year = get_current_financial_year()
+
     try:
+        conn = get_db()
+
+        # Clear All should do nothing when there is actually nothing to
+        # clear.  The current FY itself is not considered user data.
+        business_count = conn.execute("""
+            SELECT COUNT(*) AS total
+            FROM businesses
+        """).fetchone()["total"]
+
+        bill_count = conn.execute("""
+            SELECT COUNT(*) AS total
+            FROM entries
+        """).fetchone()["total"]
+
+        received_count = conn.execute("""
+            SELECT COUNT(*) AS total
+            FROM received_entries
+        """).fetchone()["total"]
+
+        business_year_count = conn.execute("""
+            SELECT COUNT(*) AS total
+            FROM business_years
+        """).fetchone()["total"]
+
+        non_current_year_count = conn.execute("""
+            SELECT COUNT(*) AS total
+            FROM financial_years
+            WHERE financial_year <> ?
+        """, (current_year,)).fetchone()["total"]
+
+        conn.close()
+
+        has_data = any([
+            business_count > 0,
+            bill_count > 0,
+            received_count > 0,
+            business_year_count > 0,
+            non_current_year_count > 0,
+        ])
+
+        if not has_data:
+            return jsonify({
+                "success": False,
+                "no_action": True,
+                "message": "There is no data to clear."
+            })
+
+        # Capture businesses + years + all transaction data BEFORE clearing.
         snapshot = capture_all_data_snapshot()
 
         recovery_id = save_recovery_backup(
@@ -4218,9 +4340,20 @@ def clear_all():
 
         conn = get_db()
 
+        # Complete Clear All: remove names, all transaction data,
+        # business-year close amounts and all financial years.
         conn.execute("DELETE FROM entries")
         conn.execute("DELETE FROM received_entries")
         conn.execute("DELETE FROM business_years")
+        conn.execute("DELETE FROM businesses")
+        conn.execute("DELETE FROM financial_years")
+
+        # Always leave only the real current financial year.
+        conn.execute("""
+            INSERT INTO financial_years
+            (financial_year, created_at)
+            VALUES (?, CURRENT_TIMESTAMP)
+        """, (current_year,))
 
         conn.commit()
         conn.close()
@@ -4228,10 +4361,16 @@ def clear_all():
         return jsonify({
             "success": True,
             "recovery_id": recovery_id,
-            "year": selected_year
+            "year": current_year,
+            "cleared_all": True
         })
 
     except Exception as exc:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
         return jsonify({
             "success": False,
             "message": str(exc)
@@ -5207,11 +5346,10 @@ def view_all():
         buffer.getvalue(),
         mimetype="application/pdf",
         headers={
+            "Content-Type":
+                "application/pdf",
             "Content-Disposition":
-                (
-                    "inline; "
-                    f'filename="{filename}"'
-                ),
+                "inline",
             "Content-Length":
                 str(len(buffer.getvalue())),
             "Cache-Control":
@@ -5329,6 +5467,8 @@ def save_file(business_id):
         buffer.getvalue(),
         mimetype="application/pdf",
         headers={
+            "Content-Type":
+                "application/pdf",
             "Content-Disposition":
                 (
                     "attachment; "
@@ -5760,11 +5900,10 @@ def view_file(business_id):
         buffer.getvalue(),
         mimetype="application/pdf",
         headers={
+            "Content-Type":
+                "application/pdf",
             "Content-Disposition":
-                (
-                    "inline; "
-                    f'filename="{filename}"'
-                ),
+                "inline",
             "Content-Length":
                 str(len(buffer.getvalue())),
             "Cache-Control":
