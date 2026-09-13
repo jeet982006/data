@@ -68,6 +68,17 @@ body {
 
     box-shadow:
         0 20px 50px rgba(0, 0, 0, 0.18);
+
+    transition: all 0.3s ease;
+}
+
+
+/* ================================
+   Step Sections
+================================ */
+
+.step-section {
+    width: 100%;
 }
 
 
@@ -110,6 +121,23 @@ body {
 
     box-shadow:
         0 10px 25px rgba(102, 126, 234, 0.35);
+
+    transition: all 0.3s ease;
+}
+
+
+.error-logo {
+    background:
+        linear-gradient(
+            135deg,
+            #ef4444,
+            #dc2626
+        );
+
+    box-shadow:
+        0 10px 25px rgba(239, 68, 68, 0.35);
+
+    font-size: 34px;
 }
 
 
@@ -121,6 +149,11 @@ body {
     color: #111827;
 
     margin-bottom: 8px;
+}
+
+
+.error-title {
+    color: #dc2626 !important;
 }
 
 
@@ -146,13 +179,17 @@ body {
 
     border-radius: 10px;
 
-    padding: 12px 14px;
+    padding: 16px 18px;
 
-    margin-bottom: 20px;
+    margin-bottom: 22px;
 
     font-size: 14px;
 
+    line-height: 1.6;
+
     text-align: center;
+
+    font-weight: 500;
 }
 
 
@@ -206,6 +243,8 @@ body {
     font-size: 17px;
 
     pointer-events: none;
+
+    z-index: 1;
 }
 
 
@@ -233,6 +272,10 @@ body {
     transition:
         border-color 0.2s ease,
         box-shadow 0.2s ease;
+
+    position: relative;
+
+    z-index: 0;
 }
 
 
@@ -281,6 +324,10 @@ body {
     align-items: center;
 
     justify-content: center;
+
+    z-index: 2;
+
+    transition: background 0.2s ease;
 }
 
 
@@ -341,6 +388,22 @@ body {
     outline: 3px solid rgba(102, 126, 234, 0.35);
 
     outline-offset: 2px;
+}
+
+
+.back-button {
+    background:
+        linear-gradient(
+            135deg,
+            #6b7280,
+            #4b5563
+        );
+}
+
+
+.back-button:hover {
+    box-shadow:
+        0 8px 20px rgba(107, 114, 128, 0.3);
 }
 
 
@@ -410,6 +473,10 @@ body {
         border-radius: 16px;
     }
 
+    .error-logo {
+        font-size: 30px;
+    }
+
     .login-header h1 {
         font-size: 24px;
     }
@@ -428,6 +495,12 @@ body {
         height: 50px;
 
         font-size: 15px;
+    }
+
+    .error-message {
+        font-size: 13px;
+
+        padding: 14px 16px;
     }
 
 }
@@ -449,6 +522,252 @@ body {
 
     .login-header h1 {
         font-size: 22px;
+    }
+
+    .logo {
+        width: 56px;
+        height: 56px;
+
+        font-size: 24px;
+
+        border-radius: 14px;
+    }
+
+    .error-logo {
+        font-size: 26px;
+    }
+
+    .input-wrapper input {
+        height: 46px;
+
+        font-size: 14px;
+    }
+
+    .login-button {
+        height: 48px;
+
+        font-size: 14px;
+    }
+
+}
+
+
+/* ================================
+   Extra Small Devices
+================================ */
+
+@media (max-width: 320px) {
+
+    .login-page {
+        padding: 8px;
+    }
+
+    .login-card {
+        padding: 20px 14px;
+
+        border-radius: 14px;
+    }
+
+    .login-header h1 {
+        font-size: 20px;
+    }
+
+    .login-header p {
+        font-size: 12px;
+    }
+
+    .logo {
+        width: 50px;
+        height: 50px;
+
+        font-size: 22px;
+    }
+
+    .input-wrapper input {
+        height: 44px;
+
+        font-size: 13px;
+
+        padding: 0 40px 0 40px;
+    }
+
+    .input-icon {
+        font-size: 15px;
+
+        left: 12px;
+    }
+
+    .login-button {
+        height: 46px;
+
+        font-size: 14px;
+    }
+
+}
+
+
+/* ================================
+   Landscape Mobile
+================================ */
+
+@media (max-height: 500px) and (orientation: landscape) {
+
+    .login-page {
+        align-items: flex-start;
+
+        padding: 12px;
+    }
+
+    .login-card {
+        margin-top: 10px;
+
+        margin-bottom: 10px;
+
+        padding: 20px 24px;
+    }
+
+    .login-header {
+        margin-bottom: 18px;
+    }
+
+    .logo {
+        width: 50px;
+        height: 50px;
+
+        font-size: 22px;
+
+        margin-bottom: 12px;
+    }
+
+    .login-header h1 {
+        font-size: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 14px;
+    }
+
+    .input-wrapper input {
+        height: 44px;
+    }
+
+    .login-button {
+        height: 44px;
+
+        font-size: 14px;
+    }
+
+    .login-footer {
+        margin-top: 16px;
+
+        padding-top: 14px;
+    }
+
+}
+
+
+/* ================================
+   Touch Device Optimizations
+================================ */
+
+@media (hover: none) and (pointer: coarse) {
+
+    .login-button:hover {
+        transform: none;
+
+        box-shadow: none;
+    }
+
+    .show-password:hover {
+        background: transparent;
+    }
+
+}
+
+
+/* ================================
+   Reduced Motion
+================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+    * {
+        transition: none !important;
+
+        animation: none !important;
+    }
+
+}
+
+
+/* ================================
+   Dark Mode Support
+================================ */
+
+@media (prefers-color-scheme: dark) {
+
+    body {
+        background:
+            linear-gradient(
+                135deg,
+                #4c1d95 0%,
+                #1e1b4b 100%
+            );
+    }
+
+    .login-card {
+        background: #1f2937;
+    }
+
+    .login-header h1 {
+        color: #f9fafb;
+    }
+
+    .login-header p {
+        color: #9ca3af;
+    }
+
+    .form-group label {
+        color: #d1d5db;
+    }
+
+    .input-wrapper input {
+        background: #374151;
+
+        border-color: #4b5563;
+
+        color: #f9fafb;
+    }
+
+    .input-wrapper input::placeholder {
+        color: #6b7280;
+    }
+
+    .input-wrapper input:focus {
+        border-color: #818cf8;
+
+        box-shadow:
+            0 0 0 3px rgba(129, 140, 248, 0.2);
+    }
+
+    .show-password:hover {
+        background: #4b5563;
+    }
+
+    .login-footer {
+        border-top-color: #374151;
+    }
+
+    .login-footer p {
+        color: #6b7280;
+    }
+
+    .error-message {
+        background: #450a0a;
+
+        color: #fca5a5;
+
+        border-color: #7f1d1d;
     }
 
 }
