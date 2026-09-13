@@ -2,7 +2,9 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
+
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0"
@@ -17,11 +19,16 @@
             filename='css/business_entry.css'
         ) }}"
     >
+
 </head>
 
 
 <body>
 
+
+<!-- =====================================================
+     HEADER
+====================================================== -->
 
 <header class="entry-header">
 
@@ -81,7 +88,10 @@
 
         <form
             method="GET"
-            action="{{ url_for('business_entry', business_id=business['id']) }}"
+            action="{{ url_for(
+                'business_entry',
+                business_id=business['id']
+            ) }}"
         >
 
             <select
@@ -240,6 +250,7 @@
             data-year="{{ selected_year }}"
         >
 
+
             <input
                 type="hidden"
                 name="entry_id"
@@ -255,6 +266,8 @@
             >
 
 
+            <!-- ================= DATE ================= -->
+
             <div class="form-group">
 
                 <label for="entry_date_picker">
@@ -262,16 +275,38 @@
                 </label>
 
 
-                <input
-                    type="text"
-                    id="entry_date_picker"
-                    class="date-picker-input"
-                    placeholder="dd/mm/yyyy"
-                    inputmode="numeric"
-                    maxlength="10"
-                    autocomplete="off"
-                    required
-                >
+                <div class="date-input-wrapper">
+
+                    <input
+                        type="text"
+                        id="entry_date_picker"
+                        class="date-picker-input"
+                        placeholder="dd/mm/yyyy"
+                        inputmode="numeric"
+                        maxlength="10"
+                        autocomplete="off"
+                        required
+                    >
+
+
+                    <button
+                        type="button"
+                        class="calendar-button"
+                        id="entryCalendarButton"
+                        aria-label="Select date"
+                    >
+                        📅
+                    </button>
+
+
+                    <input
+                        type="date"
+                        id="entryHiddenDatePicker"
+                        class="hidden-date-picker"
+                        tabindex="-1"
+                    >
+
+                </div>
 
 
                 <input
@@ -282,6 +317,9 @@
 
             </div>
 
+
+
+            <!-- ================= BILL AMOUNT ================= -->
 
             <div class="form-group">
 
@@ -303,6 +341,9 @@
 
             </div>
 
+
+
+            <!-- ================= BUTTON ================= -->
 
             <div class="form-group button-group">
 
@@ -387,9 +428,11 @@
                                 {{ loop.index }}
                             </td>
 
+
                             <td data-label="Date">
                                 {{ entry["entry_date"]|dmy }}
                             </td>
+
 
                             <td
                                 data-label="Bill Amount"
@@ -398,23 +441,21 @@
                                 {{ entry["bill_amount"]|inr }}
                             </td>
 
+
                             <td data-label="Update">
 
                                 <button
                                     type="button"
-
                                     class="row-button update-button js-edit-entry"
-
                                     data-entry-id="{{ entry['id'] }}"
-
                                     data-entry-date="{{ entry['entry_date']|dmy }}"
-
                                     data-bill-amount="{{ entry['bill_amount'] }}"
                                 >
                                     Update
                                 </button>
 
                             </td>
+
 
                             <td data-label="Delete">
 
@@ -433,6 +474,7 @@
                                         name="year"
                                         value="{{ selected_year }}"
                                     >
+
 
                                     <button
                                         type="submit"
@@ -505,7 +547,10 @@
             method="POST"
             class="received-form"
             id="receivedForm"
+            data-business-id="{{ business['id'] }}"
+            data-year="{{ selected_year }}"
         >
+
 
             <input
                 type="hidden"
@@ -514,12 +559,16 @@
                 value=""
             >
 
+
             <input
                 type="hidden"
                 name="year"
                 value="{{ selected_year }}"
             >
 
+
+
+            <!-- ================= RECEIVED DATE ================= -->
 
             <div class="form-group">
 
@@ -528,16 +577,38 @@
                 </label>
 
 
-                <input
-                    type="text"
-                    id="received_date_picker"
-                    class="date-picker-input"
-                    placeholder="dd/mm/yyyy"
-                    inputmode="numeric"
-                    maxlength="10"
-                    autocomplete="off"
-                    required
-                >
+                <div class="date-input-wrapper">
+
+                    <input
+                        type="text"
+                        id="received_date_picker"
+                        class="date-picker-input"
+                        placeholder="dd/mm/yyyy"
+                        inputmode="numeric"
+                        maxlength="10"
+                        autocomplete="off"
+                        required
+                    >
+
+
+                    <button
+                        type="button"
+                        class="calendar-button"
+                        id="receivedCalendarButton"
+                        aria-label="Select received date"
+                    >
+                        📅
+                    </button>
+
+
+                    <input
+                        type="date"
+                        id="receivedHiddenDatePicker"
+                        class="hidden-date-picker"
+                        tabindex="-1"
+                    >
+
+                </div>
 
 
                 <input
@@ -548,6 +619,9 @@
 
             </div>
 
+
+
+            <!-- ================= AMOUNT RECEIVED ================= -->
 
             <div class="form-group">
 
@@ -570,11 +644,15 @@
             </div>
 
 
+
+            <!-- ================= NOTE ================= -->
+
             <div class="form-group">
 
                 <label for="received_note">
                     Note (Optional)
                 </label>
+
 
                 <input
                     type="text"
@@ -586,6 +664,9 @@
 
             </div>
 
+
+
+            <!-- ================= BUTTON ================= -->
 
             <div class="form-group button-group">
 
@@ -673,9 +754,11 @@
                                 {{ loop.index }}
                             </td>
 
+
                             <td data-label="Date">
                                 {{ received["received_date"]|dmy }}
                             </td>
+
 
                             <td
                                 data-label="Amount Received"
@@ -684,29 +767,27 @@
                                 {{ received["amount_received"]|inr }}
                             </td>
 
+
                             <td data-label="Note">
-                                {{ received["note"] if received["note"] else "-" }}
+                                {{ received["note"] or "-" }}
                             </td>
+
 
                             <td data-label="Update">
 
                                 <button
                                     type="button"
-
                                     class="row-button update-button js-edit-received"
-
                                     data-received-id="{{ received['id'] }}"
-
                                     data-received-date="{{ received['received_date']|dmy }}"
-
                                     data-amount-received="{{ received['amount_received'] }}"
-
-                                    data-note="{{ received['note']|default('') }}"
+                                    data-note="{{ received['note'] or '' }}"
                                 >
                                     Update
                                 </button>
 
                             </td>
+
 
                             <td data-label="Delete">
 
@@ -725,6 +806,7 @@
                                         name="year"
                                         value="{{ selected_year }}"
                                     >
+
 
                                     <button
                                         type="submit"
@@ -772,6 +854,7 @@
 
     <section class="totals-card">
 
+
         <div class="total-box">
 
             <span>
@@ -783,6 +866,7 @@
             </strong>
 
         </div>
+
 
 
         <div class="total-box close-total-box">
@@ -798,6 +882,7 @@
         </div>
 
 
+
         <div class="total-box">
 
             <span>
@@ -811,6 +896,7 @@
         </div>
 
 
+
         <div class="total-box received-total-box">
 
             <span>
@@ -822,6 +908,7 @@
             </strong>
 
         </div>
+
 
 
         <div class="total-box net-box">
@@ -842,6 +929,7 @@
 </main>
 
 
+
 <!-- =====================================================
      UPDATE POPUP
 ===================================================== -->
@@ -853,6 +941,7 @@
 
     <div class="entry-popup-box">
 
+
         <button
             type="button"
             class="entry-popup-close"
@@ -861,19 +950,24 @@
             ×
         </button>
 
+
         <div class="entry-popup-icon">
             ✏️
         </div>
+
 
         <h2>
             Update Entry
         </h2>
 
+
         <p id="updatePopupMessage">
             Do you want to update this entry?
         </p>
 
+
         <div class="entry-popup-buttons">
+
 
             <button
                 type="button"
@@ -882,6 +976,7 @@
             >
                 Cancel
             </button>
+
 
             <button
                 type="button"
@@ -898,8 +993,16 @@
 </div>
 
 
+
+<!-- =====================================================
+     EXTERNAL JAVASCRIPT
+===================================================== -->
+
 <script
-    src="{{ url_for('static', filename='js/business_entry.js') }}"
+    src="{{ url_for(
+        'static',
+        filename='js/business_entry.js'
+    ) }}"
 ></script>
 
 
