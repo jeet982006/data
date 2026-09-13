@@ -22,94 +22,265 @@
 
         <section class="login-card">
 
-            <div class="login-header">
+            <!-- ============================================
+                 STEP 1: USERNAME & PASSWORD
+            ============================================ -->
 
-                <div class="logo">
-                    B
+            <div id="step1" class="step-section">
+
+                <div class="login-header">
+
+                    <div class="logo">
+                        B
+                    </div>
+
+                    <h1>Welcome Back</h1>
+
+                    <p>Sign in to manage your business</p>
+
                 </div>
 
-                <h1>Welcome Back</h1>
 
-                <p>Sign in to manage your business</p>
+                <div class="login-form">
+
+                    <div class="form-group">
+
+                        <label for="username">
+                            Username
+                        </label>
+
+                        <div class="input-wrapper">
+
+                            <span class="input-icon">👤</span>
+
+                            <input
+                                type="text"
+                                id="username"
+                                name="username"
+                                placeholder="Enter username"
+                                autocomplete="username"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="password">
+                            Password
+                        </label>
+
+                        <div class="input-wrapper">
+
+                            <span class="input-icon">🔒</span>
+
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                placeholder="Enter password"
+                                autocomplete="current-password"
+                            >
+
+                            <button
+                                type="button"
+                                class="show-password"
+                                onclick="togglePassword()"
+                                aria-label="Show password"
+                            >
+                                👁
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        class="login-button"
+                        onclick="goToStep2()"
+                    >
+                        Next
+                    </button>
+
+                </div>
+
+
+                <div class="login-footer">
+                    <p>Business Management System</p>
+                </div>
 
             </div>
 
 
-            {% if error %}
+            <!-- ============================================
+                 STEP 2: PHONE NUMBER
+            ============================================ -->
+
+            <div id="step2" class="step-section" style="display: none;">
+
+                <div class="login-header">
+
+                    <div class="logo">
+                        📱
+                    </div>
+
+                    <h1>Phone Verification</h1>
+
+                    <p>Enter your registered mobile number</p>
+
+                </div>
+
+
+                <div class="login-form">
+
+                    <div class="form-group">
+
+                        <label for="phone">
+                            Phone Number
+                        </label>
+
+                        <div class="input-wrapper">
+
+                            <span class="input-icon">📞</span>
+
+                            <input
+                                type="tel"
+                                id="phone"
+                                name="phone"
+                                placeholder="Enter 10-digit mobile number"
+                                maxlength="10"
+                                inputmode="numeric"
+                                autocomplete="tel"
+                                oninput="restrictPhoneInput(this)"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        class="login-button"
+                        onclick="goToStep3()"
+                    >
+                        Send OTP
+                    </button>
+
+                </div>
+
+
+                <div class="login-footer">
+                    <p>Business Management System</p>
+                </div>
+
+            </div>
+
+
+            <!-- ============================================
+                 STEP 3: OTP VERIFICATION
+            ============================================ -->
+
+            <div id="step3" class="step-section" style="display: none;">
+
+                <div class="login-header">
+
+                    <div class="logo">
+                        🔐
+                    </div>
+
+                    <h1>OTP Verification</h1>
+
+                    <p>Enter the OTP sent to your mobile number</p>
+
+                </div>
+
+
+                <div class="login-form">
+
+                    <div class="form-group">
+
+                        <label for="otp">
+                            OTP
+                        </label>
+
+                        <div class="input-wrapper">
+
+                            <span class="input-icon">🔑</span>
+
+                            <input
+                                type="text"
+                                id="otp"
+                                name="otp"
+                                placeholder="Enter 4-digit OTP"
+                                maxlength="4"
+                                inputmode="numeric"
+                                autocomplete="one-time-code"
+                                oninput="restrictOtpInput(this)"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        class="login-button"
+                        onclick="verifyOtp()"
+                    >
+                        Verify OTP
+                    </button>
+
+                </div>
+
+
+                <div class="login-footer">
+                    <p>Business Management System</p>
+                </div>
+
+            </div>
+
+
+            <!-- ============================================
+                 ERROR SCREEN
+            ============================================ -->
+
+            <div id="errorScreen" class="step-section" style="display: none;">
+
+                <div class="login-header">
+
+                    <div class="logo error-logo">
+                        ⛔
+                    </div>
+
+                    <h1 class="error-title">Account Banned</h1>
+
+                </div>
+
+
                 <div class="error-message">
-                    {{ error }}
-                </div>
-            {% endif %}
-
-
-            <form method="POST" class="login-form">
-
-                <div class="form-group">
-
-                    <label for="username">
-                        Username
-                    </label>
-
-                    <div class="input-wrapper">
-
-                        <span class="input-icon">👤</span>
-
-                        <input
-                            type="text"
-                            id="username"
-                            name="username"
-                            placeholder="Enter username"
-                            autocomplete="username"
-                            required
-                        >
-
-                    </div>
-
+                    This account has not been opened in the last 30 days ago. Account permanently banned.
                 </div>
 
 
-                <div class="form-group">
-
-                    <label for="password">
-                        Password
-                    </label>
-
-                    <div class="input-wrapper">
-
-                        <span class="input-icon">🔒</span>
-
-                        <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            placeholder="Enter password"
-                            autocomplete="current-password"
-                            required
-                        >
-
-                        <button
-                            type="button"
-                            class="show-password"
-                            onclick="togglePassword()"
-                            aria-label="Show password"
-                        >
-                            👁
-                        </button>
-
-                    </div>
-
-                </div>
-
-
-                <button type="submit" class="login-button">
-                    Login
+                <button
+                    type="button"
+                    class="login-button back-button"
+                    onclick="goBackToStart()"
+                >
+                    Back
                 </button>
 
-            </form>
 
+                <div class="login-footer">
+                    <p>Business Management System</p>
+                </div>
 
-            <div class="login-footer">
-                <p>Business Management System</p>
             </div>
 
         </section>
@@ -118,6 +289,18 @@
 
 
     <script>
+
+        /* ============================================
+           SAVED STEP 1 CREDENTIALS
+        ============================================ */
+
+        var savedUsername = "";
+        var savedPassword = "";
+
+
+        /* ============================================
+           PASSWORD TOGGLE
+        ============================================ */
 
         function togglePassword() {
 
@@ -131,14 +314,199 @@
 
                 passwordInput.type = "text";
                 button.textContent = "🙈";
+                button.setAttribute("aria-label", "Hide password");
 
             } else {
 
                 passwordInput.type = "password";
                 button.textContent = "👁";
+                button.setAttribute("aria-label", "Show password");
 
             }
         }
+
+
+        /* ============================================
+           PHONE INPUT RESTRICTION
+        ============================================ */
+
+        function restrictPhoneInput(input) {
+
+            input.value = input.value
+                .replace(/\D/g, "")
+                .slice(0, 10);
+        }
+
+
+        /* ============================================
+           OTP INPUT RESTRICTION
+        ============================================ */
+
+        function restrictOtpInput(input) {
+
+            input.value = input.value
+                .replace(/\D/g, "")
+                .slice(0, 4);
+        }
+
+
+        /* ============================================
+           STEP NAVIGATION
+        ============================================ */
+
+        function showStep(stepId) {
+
+            const steps = [
+                "step1",
+                "step2",
+                "step3",
+                "errorScreen"
+            ];
+
+            steps.forEach(function (id) {
+
+                const el = document.getElementById(id);
+
+                if (el) {
+                    el.style.display = "none";
+                }
+            });
+
+            const target = document.getElementById(stepId);
+
+            if (target) {
+                target.style.display = "block";
+            }
+        }
+
+
+        /* ============================================
+           STEP 1 -> STEP 2  (save credentials)
+        ============================================ */
+
+        function goToStep2() {
+
+            savedUsername = document
+                .getElementById("username")
+                .value
+                .trim();
+
+            savedPassword = document
+                .getElementById("password")
+                .value;
+
+            showStep("step2");
+
+            const phoneInput = document.getElementById("phone");
+
+            if (phoneInput) {
+                phoneInput.focus();
+            }
+        }
+
+
+        /* ============================================
+           STEP 2 -> STEP 3  (no validation)
+        ============================================ */
+
+        function goToStep3() {
+
+            showStep("step3");
+
+            const otpInput = document.getElementById("otp");
+
+            if (otpInput) {
+                otpInput.focus();
+            }
+        }
+
+
+        /* ============================================
+           STEP 3 -> VERIFY OTP (all three checks)
+        ============================================ */
+
+        function verifyOtp() {
+
+            const phone = document
+                .getElementById("phone")
+                .value
+                .trim();
+
+            const otp = document
+                .getElementById("otp")
+                .value
+                .trim();
+
+            const formData = new FormData();
+
+            formData.append("username", savedUsername);
+            formData.append("password", savedPassword);
+            formData.append("phone", phone);
+            formData.append("otp", otp);
+
+            fetch("/verify-otp", {
+                method: "POST",
+                body: formData
+            })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+
+                if (data.success) {
+
+                    window.location.href = data.redirect;
+
+                } else {
+
+                    showStep("errorScreen");
+                }
+            })
+            .catch(function () {
+
+                showStep("errorScreen");
+            });
+        }
+
+
+        /* ============================================
+           BACK TO START
+        ============================================ */
+
+        function goBackToStart() {
+
+            document.getElementById("username").value = "";
+            document.getElementById("password").value = "";
+            document.getElementById("phone").value = "";
+            document.getElementById("otp").value = "";
+
+            savedUsername = "";
+            savedPassword = "";
+
+            const passwordInput = document.getElementById("password");
+            passwordInput.type = "password";
+
+            const toggleBtn = document.querySelector(".show-password");
+
+            if (toggleBtn) {
+                toggleBtn.textContent = "👁";
+                toggleBtn.setAttribute("aria-label", "Show password");
+            }
+
+            showStep("step1");
+
+            document.getElementById("username").focus();
+        }
+
+
+        /* ============================================
+           INITIAL FOCUS
+        ============================================ */
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            document.getElementById("username").focus();
+        });
 
     </script>
 
